@@ -19,20 +19,14 @@ import software.amazon.awssdk.services.rekognition.RekognitionClient;
 @Configuration
 @RequiredArgsConstructor
 public class RekogConfig {
-    private final Environment env;
-
     @Value("${cloud.aws.credentials.accessKey}")
     private String accessKey;
 
     @Value("${cloud.aws.credentials.secretKey}")
     private String secretKey;
 
-    @Value("${cloud.aws.region.static}")
-    private String region;
-
-
     @Bean
-    public RekognitionClient getRekognitionClient(){
+    public RekognitionClient rekognitionClient() {
         AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
 
         return RekognitionClient.builder()
@@ -40,8 +34,4 @@ public class RekogConfig {
                 .credentialsProvider(StaticCredentialsProvider.create(credentials))
                 .build();
     }
-
-
-
-
 }

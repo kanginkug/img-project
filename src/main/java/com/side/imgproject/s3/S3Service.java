@@ -24,9 +24,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class S3Service {
 
-    private final AmazonS3Client amazonS3Client;
-    private S3Client s3Client;
 
+
+    private final AmazonS3Client amazonS3Client;
+
+    @Autowired
     private RekognitionClient rekognitionClient;
 
     @Value("${cloud.aws.s3.bucket}")
@@ -50,7 +52,7 @@ public class S3Service {
 
         Image rekognitionImage = Image.builder()
                 .s3Object(S3Object.builder()
-                        .bucket("kik-bucket")
+                        .bucket(bucket)
                         .name(getImageKeyFromUrl(imageUrl))
                         .build())
                 .build();

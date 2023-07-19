@@ -42,9 +42,8 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 
 	//rekognition 추가
-	implementation platform('software.amazon.awssdk:bom:2.17.230')
-	implementation 'software.amazon.awssdk:s3'
-	implementation 'software.amazon.awssdk:rekognition'
+	implementation 'com.amazonaws:aws-java-sdk:1.11.256'
+	implementation 'com.amazonaws:aws-java-sdk-rekognition:1.11.256'
 
 }
 

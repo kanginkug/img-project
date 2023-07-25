@@ -45,6 +45,9 @@ dependencies {
 	implementation 'com.amazonaws:aws-java-sdk:1.11.256'
 	implementation 'com.amazonaws:aws-java-sdk-rekognition:1.11.256'
 
+	//mysql
+	implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.34'
+
 }
 
 tasks.named('test') {

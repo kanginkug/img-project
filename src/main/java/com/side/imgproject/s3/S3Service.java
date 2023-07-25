@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,11 +30,13 @@ public class S3Service {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    public void uploadImage(MultipartFile multipartFile, String dirName) throws Exception {
-        String url = "https://kik-bucket.s3.ap-northeast-2.amazonaws.com/image/";
+    @Value("${cloud.aws.region.static}")
+    private String region;
+
+    public void uploadImage(MultipartFile multipartFile) throws Exception {
         String photo = "";
 
-        String originalName = dirName + "/" + UUID.randomUUID() + "--" + multipartFile.getOriginalFilename();
+        String originalName = UUID.randomUUID() + "--" + multipartFile.getOriginalFilename();
         long size = multipartFile.getSize();
 
         ObjectMetadata objectMetadata = new ObjectMetadata();
@@ -47,27 +50,47 @@ public class S3Service {
         photo = s3Url.toString();
 
         AmazonRekognition rekognitionClient = AmazonRekognitionClientBuilder.standard()
-                .withRegion("ap-northeast-2")
+                .withRegion(region)
                 .build();
 
-        DetectLabelsRequest request = new DetectLabelsRequest()
+
+        DetectFacesRequest request = new DetectFacesRequest()
                 .withImage(new Image()
                         .withS3Object(new S3Object()
-                                .withName(photo).withBucket(bucket)))
-                .withMaxLabels(10)
-                .withMinConfidence(75F);
+                                .withName(getImageKeyFromUrl(photo))
+                                .withBucket(bucket)))
+                .withAttributes(Attribute.ALL);
 
         try {
-            DetectLabelsResult result = rekognitionClient.detectLabels(request);
-            List<Label> labels = result.getLabels();
+            DetectFacesResult result = rekognitionClient.detectFaces(request);
+            List < FaceDetail > faceDetails = result.getFaceDetails();
 
             System.out.println("Detected labels for " + photo);
-            for (Label label : labels) {
-                System.out.println(label.getName() + ": " + label.getConfidence().toString());
+            for (FaceDetail face: faceDetails) {
+                if (request.getAttributes().contains("ALL")) {
+                    AgeRange ageRange = face.getAgeRange();
+                    System.out.println("The detected face is estimated to be between "
+                            + ageRange.getLow().toString() + " and " + ageRange.getHigh().toString()
+                            + " years old.");
+                    System.out.println("Here's the complete set of attributes:");
+                } else { // non-default attributes have null values.
+                    System.out.println("Here's the default set of attributes:");
+                }
+
+                ObjectMapper objectMapper = new ObjectMapper();
+                System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(face));
             }
-        } catch (AmazonRekognitionException e) {
+        } catch(AmazonRekognitionException e) {
             e.printStackTrace();
         }
+    }
+
+    private String getImageKeyFromUrl(String imageUrl) {
+        int lastSlashIndex = imageUrl.lastIndexOf("/");
+        if (lastSlashIndex != -1 && lastSlashIndex < imageUrl.length() - 1) {
+            return imageUrl.substring(lastSlashIndex + 1);
+        }
+        return "";
     }
 
 }

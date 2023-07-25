@@ -20,7 +20,7 @@ public class S3Controller {
     @PostMapping("/images")
     public void uploadImage(ImageRequestDto imageRequestDto) throws Exception {
 
-         s3Service.uploadImage(imageRequestDto.getImage(), "image");
+         s3Service.uploadImage(imageRequestDto.getImage());
     }
 
 
